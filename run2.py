@@ -80,6 +80,7 @@ def find_next_step(graph, virus_pos, target_gateway):
                         path.append(node)
                         node = prev[node]
                     return path[-1] if path else None
+
     return None
 
 def main():
