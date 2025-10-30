@@ -14,8 +14,23 @@ def solve(edges: list[tuple[str, str]]) -> list[str]:
     """
     graph = build_graph(edges)
     targets = {node for node in graph if node.isupper()}
-    result = bfs_from_targets(graph, targets)
-    return list(result)
+    result = []
+    virus_pos = 'a'
+    while targets and virus_pos:
+        edges_list = bfs_from_targets(graph, targets, virus_pos)
+        if not edges_list:
+            break
+        edge_to_remove = edges_list[0]
+        result.append(edge_to_remove)
+        gateway, node = edge_to_remove.split('-')
+        target = gateway
+        next_virus_pos = find_next_step(graph, virus_pos, target)
+        graph[gateway].remove(node)
+        graph[node].remove(gateway)
+        if not graph[gateway]:
+            targets.discard(gateway)
+        virus_pos = next_virus_pos
+    return result
 
 def build_graph(edges):
     graph = {}
@@ -24,13 +39,11 @@ def build_graph(edges):
         graph.setdefault(node2, []).append(node1)
     return graph
 
-
-def bfs_from_targets(graph, targets):
+def bfs_from_targets(graph, targets, virus_pos):
     queue = deque()
     visited = {}
-    start_node = 'a'
-    queue.append(start_node)
-    visited[start_node] = 0
+    queue.append(virus_pos)
+    visited[virus_pos] = 0
     answer = set()
     while queue:
         current = queue.popleft()
@@ -41,11 +54,33 @@ def bfs_from_targets(graph, targets):
                 queue.append(neighbor)
             if neighbor in targets:
                 for node in graph[neighbor]:
-                    if node not in targets:
+                    if node not in targets and node in graph[neighbor]:
                         answer.add((visited[node], f"{neighbor}-{node}"))
     sorted_answer = sorted(answer)
     return [edge for dist, edge in sorted_answer]
 
+
+def find_next_step(graph, virus_pos, target_gateway):
+    if target_gateway in graph[virus_pos]:
+        return None
+    visited = {virus_pos}
+    queue = deque([virus_pos])
+    prev = {}
+    while queue:
+        current = queue.popleft()
+        for neighbor in graph.get(current, []):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                prev[neighbor] = current
+                queue.append(neighbor)
+                if neighbor == target_gateway:
+                    path = []
+                    node = neighbor
+                    while node != virus_pos:
+                        path.append(node)
+                        node = prev[node]
+                    return path[-1] if path else None
+    return None
 
 def main():
     edges = []
