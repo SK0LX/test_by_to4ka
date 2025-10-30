@@ -14,7 +14,7 @@ def solve(edges: list[tuple[str, str]]) -> list[str]:
     """
     graph = build_graph(edges)
     targets = {node for node in graph if node.isupper()}
-    result = bfs_from_gateways(graph, targets)
+    result = bfs_from_targets(graph, targets)
     return list(result)
 
 def build_graph(edges):
@@ -25,25 +25,26 @@ def build_graph(edges):
     return graph
 
 
-def bfs_from_gateways(graph, targets):
+def bfs_from_targets(graph, targets):
     queue = deque()
     visited = {}
-    for target in targets:
-        queue.append((target, target))
-        visited[target] = (0, target)
+    start_node = 'a'
+    queue.append(start_node)
+    visited[start_node] = 0
     answer = set()
     while queue:
-        current, source_target = queue.popleft()
-        current_distance, _ = visited[current]
+        current = queue.popleft()
+        current_distance = visited[current]
         for neighbor in graph.get(current, []):
-            if neighbor in targets and current not in targets:
-                answer.add(f"{neighbor}-{current}")
-            elif neighbor not in visited and neighbor not in targets:
-                visited[neighbor] = (current_distance + 1, source_target)
-                queue.append((neighbor, source_target))
-            if current in targets and neighbor not in targets:
-                answer.add(f"{current}-{neighbor}")
-    return sorted(list(answer))
+            if neighbor not in visited:
+                visited[neighbor] = current_distance + 1
+                queue.append(neighbor)
+            if neighbor in targets:
+                for node in graph[neighbor]:
+                    if node not in targets:
+                        answer.add((visited[node], f"{neighbor}-{node}"))
+    sorted_answer = sorted(answer)
+    return [edge for dist, edge in sorted_answer]
 
 
 def main():
