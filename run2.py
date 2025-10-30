@@ -14,8 +14,20 @@ def solve(edges: list[tuple[str, str]]) -> list[str]:
     """
     graph = build_graph(edges)
     targets = {node for node in graph if node.isupper()}
-    result = bfs_from_targets(graph, targets)
-    return list(result)
+    result = []
+    while targets:
+        potention_edge = bfs_from_targets(graph, targets)
+        if not potention_edge:
+            break
+        edge_to_remove = potention_edge[0]
+        result.append(edge_to_remove)
+        gateway, node = edge_to_remove.split('-')
+        graph[gateway].remove(node)
+        graph[node].remove(gateway)
+        if not graph[gateway]:
+            targets.discard(gateway)
+
+    return result
 
 def build_graph(edges):
     graph = {}
